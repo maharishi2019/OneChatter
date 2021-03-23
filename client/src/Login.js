@@ -1,6 +1,9 @@
-import React, {useState} from "react"; 
-import firebase from "./Firebase"; 
-import "firebase/auth"; 
+import React, {useState} from "react" 
+
+import firebase from "./Firebase" 
+import "firebase/auth"
+
+import RandomUsername from "./Tools/RandomUsername" 
 
 export default function Login(props){
     function handleSubmit(){
@@ -13,7 +16,11 @@ export default function Login(props){
 
                 var user = result.user;
 
+                //checking if user is anonymous and setting to false
+                props.handleAnonymous();
+                //authenticating the user
                 props.handleAuthentication(user);
+                //pushing to home
                 props.history.push("/");
             }).catch((error) => {
                 var errorCode = error.code;
@@ -26,9 +33,36 @@ export default function Login(props){
             });
     }
 
+    //handling the authentication anonymously
+    function handleAnonymously(){
+        var user = {
+            displayName: RandomUsername(), 
+        }
+
+        props.handleAuthentication(user, true); 
+        props.history.push("/"); 
+    }
+    
+    //rendering login based on if the user is anonymous or not
+    function renderLogin(){
+        if(props.anonymous){
+            return(
+                <div>
+                    <button onClick={handleSubmit}>Google Login</button>
+                </div>
+            ); 
+        }else{
+            return(
+                <div>
+                    <button onClick={handleSubmit}>Google Login</button>
+                    <button onClick={handleAnonymously}>Continue Anonymously</button>
+                </div>
+            ); 
+        }
+    }
     return(
         <div>
-            <button onClick={handleSubmit}>Google Login</button>
+            {renderLogin()}
         </div>
     ); 
 }

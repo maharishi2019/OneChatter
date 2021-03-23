@@ -18,12 +18,25 @@ export default function App(){
   const localUser = localStorage.getItem("user"); 
   const [authenticated, setAuthenticated] = useState(localStorage.getItem("authenticated") === "true" ? true : false); 
   const [user, setUser] = useState(localUser ? JSON.parse(localUser) : null); 
+  const [anonymous, setAnonymous] = useState(localStorage.getItem("anonymous") === "true" ? true : false); 
 
-  function handleAuthentication(user){
+  function handleAuthentication(user, anonymous){
+    if(anonymous === true){
+      setAnonymous(true); 
+      localStorage.setItem("anonymous", true); 
+    }
+
     setAuthenticated(true); 
     setUser(user); 
     localStorage.setItem("authenticated", true); 
     localStorage.setItem("user", JSON.stringify(user)); 
+  }
+
+  function handleAnonymous(){
+    if (anonymous=== true) {
+      setAnonymous(false);
+      localStorage.setItem("anonymous", false);
+    }
   }
 
   function logOut(){
@@ -41,10 +54,11 @@ export default function App(){
             path={'/'}
             component={Home}
             authenticated={authenticated}
+            anonymous={anonymous}
             logOut={logOut}
             currentUser={user}
           />
-          <Route exact path="/login" render={(props) => <Login {...props} handleAuthentication={handleAuthentication} />} />
+          <Route exact path="/login" render={(props) => <Login {...props} handleAuthentication={handleAuthentication} handleAnonymous={handleAnonymous} anonymous={anonymous}/>} />
         </Switch>
       </Router>
     </div>
