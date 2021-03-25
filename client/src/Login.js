@@ -47,15 +47,15 @@ export default function Login(props){
     function renderLogin(){
         if(props.anonymous){
             return(
-                <div>
-                    <button onClick={handleSubmit}>Google Login</button>
+                <div className="login-div">
+                    <button className="btn btn-dark" onClick={handleSubmit}>Google Login</button>
                 </div>
             ); 
         }else{
             return(
-                <div>
-                    <button onClick={handleSubmit}>Google Login</button>
-                    <button onClick={handleAnonymously}>Continue Anonymously</button>
+                <div className="login-div">
+                    <button className="btn btn-dark" onClick={handleSubmit}>Google Login</button>
+                    <button className="btn btn-dark" onClick={handleAnonymously}>Continue Anonymously</button>
                 </div>
             ); 
         }
