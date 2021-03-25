@@ -7,11 +7,22 @@ export default function Home(props){
     const userPhotoUrl = props.currentUser.photoURL; 
     const [messages, setMessages] = useState([]); 
     const [sendMessage, setSendMessage] = useState(""); 
+    const messageEl = useRef(null);
 
     const messageRef = db.collection("messages"); 
 
-    function getMessages(){
-        messageRef.orderBy("time", "asc").onSnapshot(
+    async function getMessages(){
+        var size = 0;
+
+        //get size of the database 
+        await messageRef.get().then(
+            (snapshot) => {
+                size = snapshot.size;
+            }
+        )
+
+        //get last 15 messages from the database
+        await messageRef.orderBy("time", "asc").limitToLast(15).onSnapshot(
             (snapshot) => {
                 var messages = []
                 snapshot.forEach(
@@ -22,10 +33,30 @@ export default function Home(props){
                 setMessages(messages); 
             }
         )
+
+        if(size > 15){
+            //delete messages that are not needed
+            await messageRef.orderBy("time", "asc").limit(size - 15).get()
+                .then(function (snapshot) {
+                    var batch = db.batch();
+
+                    snapshot.forEach(function (doc) {
+                        batch.delete(doc.ref);
+                    });
+
+                    return batch.commit();
+                })
+        }
     }
 
-    useEffect(()=>{
+    useEffect(()=>{ 
         getMessages(); 
+        if (messageEl) {
+            messageEl.current.addEventListener('DOMNodeInserted', event => {
+                const { currentTarget: target } = event;
+                target.scroll({ top: target.scrollHeight, behavior: 'smooth' });
+            });
+        }
     }, [])
 
 
@@ -39,38 +70,83 @@ export default function Home(props){
         })
     }
 
+    function onEnterPress(e){
+        if (e.keyCode == 13 && e.shiftKey == false) {
+            handleSubmit(e); 
+            setSendMessage("");
+        }
+    }
+
     function handleChange(event) {
         setSendMessage(event.target.value); 
     }
 
+    function renderImage(userPhotUrl){
+        if(userPhotUrl){
+            return <img className="profile-pic" src={userPhotoUrl}></img>; 
+        }
+    }
     return(
         <div>
-            <h1>OneChatter</h1>
-            <img src={userPhotoUrl}></img>
-            {messages.slice(messages.length-20, messages.length).map(
-                (message) => {
-                    const messageData = message.data(); 
-                    const messageContent = messageData.content; 
-                    const messageSentBy = messageData.sentBy; 
-                    return(
-                        <div key={message.id}>
-                            <p>{messageContent}</p>
-                            <p>{messageSentBy}</p>
-                        </div>
-                    ); 
+            <center>
+                <h1 className="title">OneChatter</h1>
+            </center>
+            <div className="user-info">
+                {props.anonymous ?
+                    <div>
+                        <p className="anonymous-username">Using anonymously as {user}</p>
+                        <button className="btn btn-dark anonymous-side-button" onClick={() => props.history.push("/login")}>Google Login</button>
+                    </div>
+                    :
+                    <div>
+                        {renderImage(userPhotoUrl)}
+                        <p className="username">{user}</p>
+                        <button   className="btn btn-dark side-button" onClick={props.logOut}>Logout</button>
+                    </div>
                 }
-            )}
-            
-            <form onSubmit={handleSubmit}>
-                <textarea onChange={handleChange}></textarea>
-                <input type="submit" value="Send"></input>
-            </form>
-            
-            {props.anonymous ?
-                <button onClick={() => props.history.push("/login")}>Google Login</button>
-                :
-                <button onClick={props.logOut}>Logout</button>
-            }
+            </div>
+
+            <div className="message-box">
+                <div className="message-display" ref={messageEl}>
+                    {messages.map(
+                        (message) => {
+                            const messageData = message.data();
+                            const messageContent = messageData.content;
+                            const messageSentBy = messageData.sentBy;
+                            if (messageSentBy === user) {
+                                return (
+                                    <div className="sentByUser" key={message.id}>
+                                        <div className="message-content">
+                                            <p>{messageContent}</p>
+                                        </div>
+                                        <div className="message-sent-by">
+                                            <p>Sent by you</p>
+                                        </div>
+                                    </div>
+                                );
+                            } else {
+                                return (
+                                    <div className="recievedByUser" key={message.id}>
+                                        <div className="message-content">
+                                            <p>{messageContent}</p>
+                                        </div>
+                                        <div className="message-sent-by">
+                                            <p>Sent by {messageSentBy}</p>
+                                        </div>
+                                    </div>
+                                );
+                            }
+                        }
+                    )}
+                </div>
+                <div className="send-message-box">
+                    <form onSubmit={handleSubmit}>
+                        <div className="send-message-text-container">
+                            <textarea row="3" className="send-message-text-box" value={sendMessage} onKeyDown={onEnterPress} onChange={handleChange}></textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     ); 
 }
