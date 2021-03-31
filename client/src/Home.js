@@ -63,6 +63,10 @@ export default function Home(props){
     function handleSubmit(event){
         event.preventDefault(); 
 
+        if(sendMessage.trim() === ""){
+            return; 
+        }
+
         messageRef.add({
             content: sendMessage, 
             sentBy: user, 
@@ -113,6 +117,7 @@ export default function Home(props){
                             const messageData = message.data();
                             const messageContent = messageData.content;
                             const messageSentBy = messageData.sentBy;
+                            const messageTime = messageData.time.toDate().toLocaleTimeString(); 
                             if (messageSentBy === user) {
                                 return (
                                     <div className="sentByUser" key={message.id}>
@@ -120,7 +125,7 @@ export default function Home(props){
                                             <p>{messageContent}</p>
                                         </div>
                                         <div className="message-sent-by">
-                                            <p>Sent by you</p>
+                                            <p>Sent by you at {messageTime}</p>
                                         </div>
                                     </div>
                                 );
@@ -131,7 +136,7 @@ export default function Home(props){
                                             <p>{messageContent}</p>
                                         </div>
                                         <div className="message-sent-by">
-                                            <p>Sent by {messageSentBy}</p>
+                                            <p>Sent by {messageSentBy} at {messageTime}</p>
                                         </div>
                                     </div>
                                 );

@@ -59,6 +59,15 @@ export default function App(){
             currentUser={user}
           />
           <Route exact path="/login" render={(props) => <Login {...props} handleAuthentication={handleAuthentication} handleAnonymous={handleAnonymous} anonymous={anonymous}/>} />
+          <PrivateRoute
+            exact
+            path={'/:group'}
+            component={Home}
+            authenticated={authenticated}
+            anonymous={anonymous}
+            logOut={logOut}
+            currentUser={user}
+          />
         </Switch>
       </Router>
     </div>
